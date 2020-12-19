@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -12,10 +13,11 @@ namespace DisplaySwitcher
     NotifyIcon notifyIcon = new NotifyIcon();
 
     IntPtr wow64Value = IntPtr.Zero;
+    
 
     public DisplaySwitcherContext()
     {
-
+      // Set reg value 'FirstRun' to true so we know not to automatically preset 'Automatically start with Windows' setting.
       try
       {
         var displaySwitcherReg = Registry.CurrentUser.OpenSubKey("DisplaySwitcher", true);
@@ -33,6 +35,7 @@ namespace DisplaySwitcher
         {
           displaySwitcherReg.SetValue("FirstRun", "true");
 
+          // enables 'Automatically start with Windows' on first run.
           ToggleStartWithWindows(forceStartWithWindows: true);
         }
       }
