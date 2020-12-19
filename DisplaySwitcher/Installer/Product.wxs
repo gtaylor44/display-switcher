@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define DisplaySwitcher_TargetDir=$(var.DisplaySwitcher.TargetDir)?>
+  <Product Id="B873842E-FE6D-4538-8600-C881EF26ED64" Name="Display Switcher" Language="1033" Version="1.0.0.0" Manufacturer="Greg Taylor" UpgradeCode="797d55bf-fb0b-4951-ad00-c976f9cf4dd4">
+
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+    <Icon Id="icon.ico" SourceFile="$(var.ProjectDir)Icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <WixVariable Id="WixUIBannerBmp" Value="Images\installer_top-banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Images\installer_background.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)\license.rtf" />
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!--<UIRef Id="WixUI_InstallDir" />-->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <Publish Dialog="ExitDialog"
+Control="Finish"
+Event="DoAction"
+Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="Display Switcher" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="ApplicationShortcutDesktop" />
+    </Feature>
+    
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Display Switcher" />
+
+    <Property Id="WixShellExecTarget" Value="[#DisplaySwitcher.exe]" />
+    <CustomAction Id="LaunchApplication"
+      BinaryKey="WixCA"
+      DllEntry="WixShellExec"
+      Impersonate="yes" />
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="Display Switcher" />
+        <Directory Id="ProgramMenuFolder">
+          <Directory Id="ApplicationProgramsFolder" Name="Display Switcher"/>
+        </Directory>
+        <Directory Id="DesktopFolder" Name="Desktop"/>
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="6A7732AB-DC7A-4343-B0EC-B4411AF9546B">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\DisplaySwitcher" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="ApplicationShortcutDesktop" Guid="D70A64C9-F207-4D9D-A816-13FC0361FA69">
+        <Shortcut Id="ApplicationDesktopShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveDesktopFolder" Directory="DesktopFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\DisplaySwitcher" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
+      <!-- <Component Id="ProductComponent"> -->
+      <!-- TODO: Insert files, registry keys, and other resources here. -->
+      <!-- </Component> -->
+      <Component Id="DisplaySwitcher.exe" Guid="980e7703-8e2a-43be-916f-11c9ecb77010">
+        <File Id="DisplaySwitcher.exe" Name="DisplaySwitcher.exe" Source="$(var.DisplaySwitcher_TargetDir)DisplaySwitcher.exe" />
+      </Component>
+      <Component Id="DisplaySwitcher.exe.config" Guid="e063fa19-3078-40c5-a00d-672ad2a17f73">
+        <File Id="DisplaySwitcher.exe.config" Name="DisplaySwitcher.exe.config" Source="$(var.DisplaySwitcher_TargetDir)DisplaySwitcher.exe.config" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
