@@ -19,7 +19,7 @@ namespace DisplaySwitcher
       myMutex = new Mutex(true, "DisplaySwitcher", out aIsNewInstance);
       if (!aIsNewInstance)
       {
-        MessageBox.Show("Already an instance running. Please check your task tray.", "Display Switcher");
+        MessageBox.Show("An instance is already running. Please check your task tray. If you still can't see the application in the task tray, close any existing instance within the Task Manager and try again.", "Display Switcher");
         Environment.Exit(0);
       }
 

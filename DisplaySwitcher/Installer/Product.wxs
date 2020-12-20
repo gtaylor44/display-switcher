@@ -57,14 +57,14 @@ Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed
   <Fragment>
     <DirectoryRef Id="ApplicationProgramsFolder">
       <Component Id="ApplicationShortcut" Guid="6A7732AB-DC7A-4343-B0EC-B4411AF9546B">
-        <Shortcut Id="ApplicationStartMenuShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Icon="icon.ico" Id="ApplicationStartMenuShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveApplicationProgramsFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\DisplaySwitcher" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </DirectoryRef>
     <DirectoryRef Id="DesktopFolder">
       <Component Id="ApplicationShortcutDesktop" Guid="D70A64C9-F207-4D9D-A816-13FC0361FA69">
-        <Shortcut Id="ApplicationDesktopShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Icon="icon.ico" Id="ApplicationDesktopShortcut" Name="Display Switcher" Description="Easily switch between monitor profiles." Target="[INSTALLFOLDER]DisplaySwitcher.exe" WorkingDirectory="INSTALLFOLDER" />
         <RemoveFolder Id="RemoveDesktopFolder" Directory="DesktopFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\DisplaySwitcher" Name="installed" Type="integer" Value="1" KeyPath="yes" />
       </Component>
