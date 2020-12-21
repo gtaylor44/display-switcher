@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Reflection;
-using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -10,10 +8,7 @@ namespace DisplaySwitcher
 {
   public class DisplaySwitcherContext : ApplicationContext
   {
-    NotifyIcon notifyIcon = new NotifyIcon();
-
-    IntPtr wow64Value = IntPtr.Zero;
-    
+    private readonly NotifyIcon _notifyIcon = new NotifyIcon();
 
     public DisplaySwitcherContext()
     {
@@ -43,30 +38,48 @@ namespace DisplaySwitcher
 
       MenuItem exitMenuItem = new MenuItem("Exit", new EventHandler(Exit));
 
-      var thumb = (Bitmap)DisplaySwitcher.Properties.Resources.monitor_icon.GetThumbnailImage(64, 64, null, IntPtr.Zero);
+      var thumb = (Bitmap)Properties.Resources.monitor_icon.GetThumbnailImage(64, 64, null, IntPtr.Zero);
       thumb.MakeTransparent();
       var icon = Icon.FromHandle(thumb.GetHicon());
 
-      notifyIcon.Icon = icon;
-      notifyIcon.DoubleClick += new EventHandler(ShowMessage);
-      notifyIcon.ContextMenu = new ContextMenu();
+      _notifyIcon.Icon = icon;
+      _notifyIcon.DoubleClick += new EventHandler(ShowMessage);
+      _notifyIcon.ContextMenu = new ContextMenu();
+      _notifyIcon.BalloonTipText = "Switch display profile";
 
       var startWithWindowsMenuItem = new MenuItem()
       {
         Checked = StartsWithWindows(),
-        Text = "Automatically start with Windows",
+        Text = "Automatically start with Windows"
       };
 
       startWithWindowsMenuItem.Click += StartWithWindowsOnClick;
 
-      notifyIcon.ContextMenu.MenuItems.Add("PC Screen Only", PCScreenOnly);
-      notifyIcon.ContextMenu.MenuItems.Add("Duplicate", Duplicate);
-      notifyIcon.ContextMenu.MenuItems.Add("Extend", Extend);
-      notifyIcon.ContextMenu.MenuItems.Add("Second Screen Only", SecondScreenOnly);
-      notifyIcon.ContextMenu.MenuItems.Add(startWithWindowsMenuItem);
-      notifyIcon.ContextMenu.MenuItems.Add(exitMenuItem);
+      var selectedTopologyId = NativeMethods.GetCurrentTopologyId();
 
-      notifyIcon.Visible = true;
+      AddMenuItem("PC Screen Only", PCScreenOnly, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_INTERNAL);
+      AddMenuItem("Duplicate", Duplicate, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_CLONE);
+      AddMenuItem("Extend", Extend, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTEND);
+      AddMenuItem("Second Screen Only", SecondScreenOnly, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTERNAL);
+
+      // other
+      _notifyIcon.ContextMenu.MenuItems.Add(startWithWindowsMenuItem);
+      _notifyIcon.ContextMenu.MenuItems.Add(exitMenuItem);
+
+      _notifyIcon.Visible = true;
+    }
+
+    private void AddMenuItem(string text, EventHandler onClick, bool defaultItem)
+    {
+      // second screen only
+      var menuItem = new MenuItem
+      {
+        DefaultItem = defaultItem,
+        Text = text
+      };
+
+      menuItem.Click += onClick;
+      _notifyIcon.ContextMenu.MenuItems.Add(menuItem);
     }
 
     RegistryKey GetStartupRegistryKey()
@@ -122,65 +135,53 @@ namespace DisplaySwitcher
 
     void ShowMessage(object sender, EventArgs e)
     {
-      if (DisplaySwitcher.Properties.Settings.Default.ShowMessage)
-        MessageBox.Show($@"Display Switcher v1.0.0{Environment.NewLine}{Environment.NewLine}© Greg Taylor 2020{Environment.NewLine}greg@gregnz.com", "Display Switcher");
+      var assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+      var version = assemblyVersion.Major + "." + assemblyVersion.Minor + "." + assemblyVersion.Revision;
+
+      if (Properties.Settings.Default.ShowMessage)
+        MessageBox.Show($@"Display Switcher v{version}{Environment.NewLine}{Environment.NewLine}© Greg Taylor 2020{Environment.NewLine}greg@gregnz.com", "Display Switcher");
     }
 
     void Exit(object sender, EventArgs e)
     {
       // We must manually tidy up and remove the icon before we exit.
       // Otherwise it will be left behind until the user mouses over.
-      notifyIcon.Visible = false;
+      _notifyIcon.Visible = false;
 
       Application.Exit();
     }
 
     private void PCScreenOnly(object sender, EventArgs e)
     {
-      SwitchScreen("/internal");
+      SwitchScreen(sender, DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_INTERNAL);
     }
 
     private void Duplicate(object sender, EventArgs e)
     {
-      SwitchScreen("/clone");
+      SwitchScreen(sender, DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_INTERNAL);
     }
 
     private void Extend(object sender, EventArgs e)
     {
-      SwitchScreen("/extend");
+      SwitchScreen(sender, DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTEND);
     }
 
     private void SecondScreenOnly(object sender, EventArgs e)
     {
-      SwitchScreen("/external");
+      SwitchScreen(sender, DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTERNAL);
     }
 
-    private void SwitchScreen(string arguments)
+    private void SwitchScreen(object sender, DISPLAYCONFIG_TOPOLOGY_ID topologyId)
     {
-      try
-      {
-        Wow64Interop.DisableWow64FSRedirection(ref wow64Value);
+      NativeMethods.SetTopologyId(topologyId);
 
-        Process processToStart = new Process
-        {
-          StartInfo = {
-            FileName = @"DisplaySwitch.exe",
-            WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System),
-            Arguments = arguments
-          }
-        };
+      foreach (var menuItem in _notifyIcon.ContextMenu.MenuItems)
+      {
+        ((MenuItem)menuItem).DefaultItem = false;
+      }
 
-        // Start the application
-        processToStart.Start();
-      }
-      catch (Exception exc)
-      {
-        MessageBox.Show($"Unable to disable/enable WOW64 File System Redirection {exc.Message}", "Error");
-      }
-      finally
-      {
-        Wow64Interop.Wow64RevertWow64FsRedirection(wow64Value);
-      }
+      ((MenuItem)sender).DefaultItem = true;
     }
+
   }
 }

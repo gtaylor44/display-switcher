@@ -1,11 +1,16 @@
 using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace DisplaySwitcher
 {
+
   static class Program
   {
+
+
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
