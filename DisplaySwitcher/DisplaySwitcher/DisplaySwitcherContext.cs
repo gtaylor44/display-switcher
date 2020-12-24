@@ -44,8 +44,10 @@ namespace DisplaySwitcher
 
       _notifyIcon.Icon = icon;
       _notifyIcon.DoubleClick += new EventHandler(ShowMessage);
+
+      _notifyIcon.Text = "Display Switcher";
+
       _notifyIcon.ContextMenu = new ContextMenu();
-      _notifyIcon.BalloonTipText = "Switch display profile";
 
       var startWithWindowsMenuItem = new MenuItem()
       {
@@ -61,6 +63,9 @@ namespace DisplaySwitcher
       AddMenuItem("Duplicate", Duplicate, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_CLONE);
       AddMenuItem("Extend", Extend, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTEND);
       AddMenuItem("Second Screen Only", SecondScreenOnly, selectedTopologyId == DISPLAYCONFIG_TOPOLOGY_ID.DISPLAYCONFIG_TOPOLOGY_EXTERNAL);
+
+      _notifyIcon.ContextMenu.MenuItems.Add("-");
+
 
       // other
       _notifyIcon.ContextMenu.MenuItems.Add(startWithWindowsMenuItem);
